@@ -11,18 +11,36 @@ const api = axios.create({
   }
 });
 
-// Add request interceptor to include token in all requests
+// Add request interceptor
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+    console.log('Adding token to request:', config.url); // Debug log
+  } else {
+    console.log('No token found for request:', config.url); // Debug log
   }
-  console.log('Request config:', {
-    url: config.url,
-    headers: config.headers,
-    token: token
-  });
   return config;
+}, (error) => {
+  console.error('Request interceptor error:', error);
+  return Promise.reject(error);
+});
+
+// Add response interceptor for debugging
+api.interceptors.response.use((response) => {
+  console.log('Response:', {
+    url: response.config.url,
+    status: response.status,
+    headers: response.config.headers
+  });
+  return response;
+}, (error) => {
+  console.error('Response error:', {
+    url: error.config?.url,
+    status: error.response?.status,
+    message: error.message
+  });
+  return Promise.reject(error);
 });
 
 export const tasksApi = {
@@ -42,10 +60,16 @@ export const usersApi = {
 };
 
 export const weatherApi = {
-  getWeatherInfo: () => {
-    return api.post<{ response: { code: number; message: string }; result: { data: WeatherInfo[] } }>(
-      '/weather_info/get_weather_info'
-    ).then(res => res.data.result.data);
+  getWeatherInfo: async () => {
+    const token = localStorage.getItem('token');
+    console.log('Token when getting weather:', token); // Debug log
+    
+    const response = await api.post<{
+      response: { code: number; message: string };
+      result: { data: WeatherInfo[] }
+    }>('/weather_info/get_weather_info');
+    
+    return response.data.result.data;
   },
   createWeatherInfo: (info: { lat: number; lon: number }) => {
     return api.post<WeatherInfo>('/weather_info/create_weather_info', {
@@ -80,17 +104,11 @@ export const authApi = {
         password
       });
 
-      console.log('Login response:', response.data);
-
       if (response.data.response.code === 0) {
-        // Save token to localStorage
-        localStorage.setItem('token', response.data.result.access_token);
-        
-        return {
-          access_token: response.data.result.access_token
-        };
+        const token = response.data.result.access_token;
+        localStorage.setItem('token', token);
+        return { access_token: token };
       }
-      
       throw new Error(response.data.response.message);
     } catch (error) {
       console.error('Login error:', error);
