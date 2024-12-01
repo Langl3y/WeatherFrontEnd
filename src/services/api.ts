@@ -11,13 +11,17 @@ const api = axios.create({
   }
 });
 
-// Add request interceptor to include token
+// Add request interceptor to include token in all requests
 api.interceptors.request.use((config) => {
-  console.log('Making request to:', `${BASE_URL}${config.url}`); // Debug log
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  console.log('Request config:', {
+    url: config.url,
+    headers: config.headers,
+    token: token
+  });
   return config;
 });
 
@@ -76,9 +80,12 @@ export const authApi = {
         password
       });
 
-      console.log('Login response:', response.data); // Debug log
+      console.log('Login response:', response.data);
 
-      if (response.data.response.code === 0) { // Success check
+      if (response.data.response.code === 0) {
+        // Save token to localStorage
+        localStorage.setItem('token', response.data.result.access_token);
+        
         return {
           access_token: response.data.result.access_token
         };
