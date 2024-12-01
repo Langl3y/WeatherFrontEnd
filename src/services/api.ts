@@ -39,24 +39,19 @@ export const usersApi = {
 
 export const weatherApi = {
   getWeatherInfo: () => {
-    const token = localStorage.getItem('token');
     return api.post<{ response: { code: number; message: string }; result: { data: WeatherInfo[] } }>(
-      '/weather_info/get_weather_info',
-      { access_token: token }
+      '/weather_info/get_weather_info'
     ).then(res => res.data.result.data);
   },
   createWeatherInfo: (info: { lat: number; lon: number }) => {
-    const token = localStorage.getItem('token');
     return api.post<WeatherInfo>('/weather_info/create_weather_info', {
-      ...info,
-      access_token: token
+      lat: info.lat,
+      lon: info.lon
     }).then(res => res.data);
   },
   updateWeatherInfo: (id: number) => {
-    const token = localStorage.getItem('token');
     return api.post<WeatherInfo>('/weather_info/update_weather_info', {
-      id,
-      access_token: token
+      id
     }).then(res => res.data);
   }
 };
