@@ -56,23 +56,38 @@ export const weatherApi = {
   }
 };
 
+interface LoginResponse {
+  response: {
+    code: number;
+    message: string;
+  };
+  result: {
+    access_token: string;
+    token_type: string;
+    expires_in: number;
+  };
+}
+
 export const authApi = {
   login: async (username: string, password: string) => {
     try {
-      const response = await api.post<{ access_token: string }>('/login', {
+      const response = await api.post<LoginResponse>('/login', {
         username,
         password
       });
-      
-      // Only return the data if the request was successful
-      if (response.data && response.data.access_token) {
-        return response.data;
+
+      console.log('Login response:', response.data); // Debug log
+
+      if (response.data.response.code === 0) { // Success check
+        return {
+          access_token: response.data.result.access_token
+        };
       }
       
-      throw new Error('Invalid response from server');
-    } catch (error: any) {
-      console.error('Login error:', error.response || error);
-      throw new Error(error.response?.data?.message || 'Login failed');
+      throw new Error(response.data.response.message);
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
   }
 };
