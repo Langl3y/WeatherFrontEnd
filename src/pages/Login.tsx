@@ -16,8 +16,10 @@ export default function Login() {
     e.preventDefault();
     try {
       const response = await authApi.login(username, password);
-      login(response.access_token);
-      navigate('/');
+      if (response.access_token) {
+        login(response.access_token);
+        navigate('/');
+      }
     } catch (error: any) {
       showNotification(error.message || 'Login failed', 'error');
     }
