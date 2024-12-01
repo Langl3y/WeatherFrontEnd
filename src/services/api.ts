@@ -58,7 +58,7 @@ export const weatherApi = {
 
 export const authApi = {
   login: (username: string, password: string) => {
-    return api.post<{ access_token: string }>('/users/login', null, {
+    return api.post<{ access_token: string }>('/login', null, {
       auth: {
         username,
         password
